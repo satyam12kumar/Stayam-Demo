@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student QR Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    input, select {
+      padding: 10px;
+      margin: 8px;
+      width: 250px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    #qrcode {
+      margin-top: 30px;
+    }
+    #downloadBtn {
+      display: none;
+      margin-top: 20px;
+      background-color: blue;
+    }
+    #message {
+      margin-top: 15px;
+      color: red;
+      font-weight: bold;
+    }
+    footer {
+      margin-top: 30px;
+    }
+    .refresh-btn {
+      padding: 5px 15px;
+      background-color: orange;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Student QR Generator</h2>
+  <input type="text" id="name" placeholder="Enter Name" required><br>
+  <input type="text" id="roll" placeholder="Enter Roll Number" required oninput="validateRollNumber(event)"><br>
+
+  <select id="classSelect" onchange="checkOtherClass()">
+    <option value="">Select Class</option>
+    <option value="BBA">BBA</option>
+    <option value="BCA">BCA</option>
+    <option value="BTTM">BTTM</option>
+    <option value="BSC Food Technology">BSC Food Technology</option>
+    <option value="MBA">MBA</option>
+    <option value="MCA">MCA</option>
+    <option value="Other">Other</option>
+  </select><br>
+
+  <input type="text" id="otherClass" placeholder="Enter Other Class" style="display:none;"><br>
+
+  <select id="semesterSelect" required>
+    <option value=""><placeholder>Select Semester</placeholder></option>
+    <option value="1">Semester 1</option>
+    <option value="2">Semester 2</option>
+    <option value="3">Semester 3</option>
+    <option value="4">Semester 4</option>
+    <option value="5">Semester 5</option>
+    <option value="6">Semester 6</option>
+    <option value="6">Semester 7</option>
+    <option value="6">Semester 8</option>
+  </select><br>
+
+  <button onclick="generateQR()">Generate QR</button>
+
+  <div id="qrcode"></div>
+  <button id="downloadBtn" onclick="downloadQR()">Download QR</button>
+
+  <div id="message"></div>
+
+  <footer>
+    <button class="refresh-btn" onclick="refreshPage()">Refresh</button>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    let qrCanvas;
+
+    window.onload = function() {
+      localStorage.removeItem('students');
+      document.getElementById('name').value = "";
+      document.getElementById('roll').value = "";
+      document.getElementById('classSelect').value = "";
+      document.getElementById('semesterSelect').value = "";
+      document.getElementById('otherClass').value = "";
+      document.getElementById('otherClass').style.display = "none";
+    }
+
+    function checkOtherClass() {
+      const classSelect = document.getElementById('classSelect');
+      const otherClassInput = document.getElementById('otherClass');
+
+      if (classSelect.value === "Other") {
+        otherClassInput.style.display = "inline-block";
+      } else {
+        otherClassInput.style.display = "none";
+        otherClassInput.value = "";
+      }
+    }
+
+    function validateRollNumber(event) {
+      const rollInput = event.target;
+      const value = rollInput.value;
+
+      // Allow only numbers, remove any text
+      rollInput.value = value.replace(/[^0-9]/g, '');
+    }
+
+    function generateQR() {
+      const nameInput = document.getElementById('name');
+      const rollInput = document.getElementById('roll');
+      const classSelect = document.getElementById('classSelect');
+      const otherClassInput = document.getElementById('otherClass');
+      const semesterSelect = document.getElementById('semesterSelect');
+      const messageDiv = document.getElementById('message');
+      messageDiv.textContent = "";
+
+      const name = nameInput.value.trim();
+      const roll = rollInput.value.trim();
+      let studentClass = classSelect.value;
+      const semester = semesterSelect.value;
+
+      if (studentClass === "Other") {
+        studentClass = otherClassInput.value.trim();
+      }
+
+      if (!name || !roll || !studentClass || !semester) {
+        alert("Please fill all fields properly");
+        return;
+      }
+
+      let students = JSON.parse(localStorage.getItem('students')) || [];
+
+      const isExist = students.some(student =>
+        student.name === name && 
+        student.roll === roll &&
+        student.class === studentClass && 
+        student.semester === semester
+      );
+
+      if (isExist) {
+        messageDiv.textContent = "This student already exists!";
+        return;
+      }
+
+      students.push({ name, roll, class: studentClass, semester });
+      localStorage.setItem('students', JSON.stringify(students));
+
+      const data = { name, roll, class: studentClass, semester };
+      const qrData = JSON.stringify(data);
+
+      document.getElementById('qrcode').innerHTML = "";
+
+      qrCanvas = document.createElement("canvas");
+      QRCode.toCanvas(qrCanvas, qrData, function (err) {
+        if (err) console.error(err);
+        document.getElementById('qrcode').appendChild(qrCanvas);
+        document.getElementById('downloadBtn').style.display = "inline-block";
+      });
+
+      // Clear fields after QR generation
+      nameInput.value = "";
+      rollInput.value = "";
+      classSelect.value = "";
+      semesterSelect.value = "";
+      otherClassInput.value = "";
+      otherClassInput.style.display = "none";
+
+      // Reset placeholders
+      nameInput.placeholder = "Enter Name";
+      rollInput.placeholder = "Enter Roll Number";
+    }
+
+    function downloadQR() {
+      const link = document.createElement('a');
+      link.download = 'StudentQR.png';
+      link.href = qrCanvas.toDataURL();
+      link.click();
+    }
+
+    function refreshPage() {
+      location.reload(); // Refreshes the page
+    }
+  </script>
+
+</body>
+</html>

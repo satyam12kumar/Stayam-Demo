@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task History</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Task History</h1>
+    <ul id="history-list"></ul>
+
+    <button id="download-history">Download History</button>
+    <button id="clear-history">Clear History</button>
+    <a href="index.html"><button>Back to Tasks</button></a>
+  </div>
+
+  <script>
+    const historyList = document.getElementById('history-list');
+    const clearBtn = document.getElementById('clear-history');
+    const downloadBtn = document.getElementById('download-history');
+
+    let history = JSON.parse(localStorage.getItem('history')) || [];
+
+    function renderHistory() {
+      historyList.innerHTML = '';
+      history.forEach(item => {
+        const timestamp = item.completedAt || item.deletedAt;
+        const status = item.completed ? "Completed" : "Deleted";
+        const formattedDate = new Date(timestamp).toLocaleString();
+        
+        const li = document.createElement('li');
+        li.textContent = `${item.text} - ${status} (${formattedDate})`;
+        historyList.appendChild(li);
+      });
+    }
+
+    function downloadHistory() {
+      let content = "Task,Status,Date\n";
+      history.forEach(item => {
+        const timestamp = item.completedAt || item.deletedAt;
+        const status = item.completed ? "Completed" : "Deleted";
+        const date = new Date(timestamp).toLocaleString();
+        content += `"${item.text}","${status}","${date}"\n`;
+      });
+
+      const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "task-history.csv";
+      link.click();
+    }
+
+    clearBtn.onclick = () => {
+      if (confirm("Are you sure you want to clear all history?")) {
+        localStorage.removeItem('history');
+        history = [];
+        renderHistory();
+      }
+    };
+
+    downloadBtn.onclick = downloadHistory;
+
+    renderHistory();
+  </script>
+</body>
+</html>

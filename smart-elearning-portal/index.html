@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Math Game for Kids</title>
+  <link rel="stylesheet" href="/CSS/styles.css" />
+</head>
+<body>
+  <div class="container">
+
+    <!-- Avatar -->
+    <div class="avatar">
+      <img src="/assets/images/avatar1.png  " alt="Avatar" />
+      <h2>Hello, Player!</h2>
+    </div>
+
+    <!-- Level Info -->
+    <div class="level-info">
+      <h3>Level <span id="level-number">1</span></h3>
+    </div>
+
+    <!-- Question -->
+    <div class="question-section">
+      <p id="question-text">Loading question...</p>
+      <input type="number" id="answer-input" placeholder="Enter your answer" />
+      <button id="submit-btn">Submit</button>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer">
+      Time left: <span id="time-left">30</span> seconds
+    </div>
+
+    <!-- Result -->
+    <div id="result" class="result"></div>
+
+    <!-- Badges -->
+    <div class="badges">
+      <h3>Badges Earned:</h3>
+      <div id="badges-container"></div>
+    </div>
+
+  </div>
+
+  <script src="JS/script.js"></script>
+</body>
+</html>

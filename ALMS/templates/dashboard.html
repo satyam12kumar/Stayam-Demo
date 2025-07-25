@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Library QR Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    p.subheading {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    #qr-reader {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
+
+    .status-box {
+      margin-top: 20px;
+      padding: 12px 15px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .success {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+
+    .error {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #ef4444;
+    }
+
+    h2 {
+      margin-top: 40px;
+      color: #111827;
+    }
+
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📚 Library QR Scanner</h1>
+    <p class="subheading">Scan the student’s QR code to log entry or exit</p>
+
+    <div id="qr-reader"></div>
+    <div id="result" class="status-box">📷 Awaiting QR scan...</div>
+
+    <h2>📄 Today's Log</h2>
+    <div id="log-table">
+      <p>Loading log...</p>
+    </div>
+  </div>
+
+  <script>
+    function loadLogTable() {
+      fetch('/logs')
+        .then(res => res.text())
+        .then(html => {
+          document.getElementById("log-table").innerHTML = html;
+        })
+        .catch(err => {
+          document.getElementById("log-table").innerHTML = "<p>❌ Could not load logs</p>";
+        });
+    }
+
+    function handleScanSuccess(decodedText, decodedResult) {
+      html5QrcodeScanner.clear().then(_ => {
+        const resultBox = document.getElementById("result");
+        resultBox.innerText = "⏳ Processing scan...";
+        resultBox.className = "status-box";
+
+        fetch('/scan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: decodedText
+        })
+        .then(res => res.json())
+        .then(data => {
+          resultBox.innerText = data.message;
+          resultBox.className = "status-box success";
+          loadLogTable(); // update table
+        })
+        .catch(err => {
+          resultBox.innerText = "❌ Error sending data to server";
+          resultBox.className = "status-box error";
+        });
+      });
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "qr-reader", { fps: 10, qrbox: 250 }
+    );
+    html5QrcodeScanner.render(handleScanSuccess);
+
+    // Load today's logs on page load
+    loadLogTable();
+  </script>
+</body>
+</html>
